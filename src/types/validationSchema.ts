@@ -10,8 +10,8 @@ export const userSchema = z.object({
         city: z.string().optional(),
         zipcode: z.string().optional(),
         geo: z.object({
-            lat: z.number().nullable().optional(),
-            lng: z.number().nullable().optional(),
+            lat: z.string().nullable().optional(),
+            lng: z.string().nullable().optional(),
         }).optional(),
     }).optional(),
     phone: z.string().regex(/^\d{10}$/, 'Invalid phone number format'),

@@ -1,47 +1,21 @@
-import React, {useState} from 'react';
-import {useForm} from 'react-hook-form';
-import {zodResolver} from '@hookform/resolvers/zod';
-import GooglePlacesAutocomplete, {geocodeByPlaceId} from 'react-google-places-autocomplete';
-import {userSchema, User} from '../types/validationSchema';
+import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { userSchema, User } from '../types/validationSchema';
+import GeoInput from './GeoInput';
+import AddressField from "./AddressField.tsx";
 
 interface UserFormProps {
     onSubmit: (data: User) => void;
     initialValues?: User;
 }
 
-const GOOGLE_PLACES_API_KEY = import.meta.env.GOOGLE_PLACES_API_KEY;
-
-const UserForm: React.FC<UserFormProps> = ({onSubmit, initialValues}) => {
+const UserForm: React.FC<UserFormProps> = ({ onSubmit, initialValues }) => {
     const [useGooglePlaces, setUseGooglePlaces] = useState(!!initialValues?.address);
-    const {register, handleSubmit, formState: {errors}, setValue} = useForm<User>({
+    const { register, handleSubmit, formState: { errors }, setValue } = useForm<User>({
         resolver: zodResolver(userSchema),
         defaultValues: initialValues,
     });
-
-    const handleAddressChange = async (place: any) => {
-        if (place && place.label) {
-            const placeDetails = await geocodeByPlaceId(place.value.place_id);
-            const { lat, lng } = placeDetails[0].geometry.location;
-            setValue('address', {
-                city: place.value.terms[2]?.value || '',
-                street: place.value.structured_formatting.main_text || '',
-                geo: {
-                    lat: lat(),
-                    lng: lng(),
-                },
-            });
-        } else {
-            setValue('address', {
-                city: '',
-                zipcode: '',
-                street: '',
-                geo: {
-                    lat: null,
-                    lng: null,
-                },
-            });
-        }
-    };
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -62,25 +36,7 @@ const UserForm: React.FC<UserFormProps> = ({onSubmit, initialValues}) => {
                     <label htmlFor="address" className="block text-sm font-medium text-gray-700">
                         Address
                     </label>
-                    {useGooglePlaces ? (
-                        <div
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                            <GooglePlacesAutocomplete
-                                apiKey={GOOGLE_PLACES_API_KEY}
-                                selectProps={{
-                                    onChange: handleAddressChange,
-                                    isClearable: true,
-                                }}
-                            />
-                        </div>
-                    ) : (
-                        <input
-                            type="text"
-                            id="address"
-                            {...register('address.street')}
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                        />
-                    )}
+                    <AddressField register={register} setValue={setValue} useGooglePlaces={useGooglePlaces} />
                     {errors.address?.street && <span className="text-red-500 text-sm">{errors.address.street.message}</span>}
                 </div>
             </div>
@@ -95,34 +51,7 @@ const UserForm: React.FC<UserFormProps> = ({onSubmit, initialValues}) => {
                     <span className="ml-2 text-sm text-gray-700">Use Google Location</span>
                 </label>
             </div>
-            {useGooglePlaces && (
-                <div className="grid grid-cols-2 gap-4">
-                    <div>
-                        <label htmlFor="latitude" className="block text-sm font-medium text-gray-700">
-                            Latitude
-                        </label>
-                        <input
-                            type="text"
-                            id="latitude"
-                            {...register('address.geo.lat')}
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                            readOnly
-                        />
-                    </div>
-                    <div>
-                        <label htmlFor="longitude" className="block text-sm font-medium text-gray-700">
-                            Longitude
-                        </label>
-                        <input
-                            type="text"
-                            id="longitude"
-                            {...register('address.geo.lng')}
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                            readOnly
-                        />
-                    </div>
-                </div>
-            )}
+            {useGooglePlaces && <GeoInput register={register} />}
             <div className="grid grid-cols-2 gap-4">
                 <div>
                     <label htmlFor="username" className="block text-sm font-medium text-gray-700">
@@ -189,7 +118,6 @@ const UserForm: React.FC<UserFormProps> = ({onSubmit, initialValues}) => {
                     {errors.phone && <span className="text-red-500 text-sm">{errors.phone.message}</span>}
                 </div>
             </div>
-
 
             <div className="flex justify-end">
                 <input
