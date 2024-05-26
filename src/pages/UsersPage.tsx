@@ -32,18 +32,23 @@ const UsersPage: React.FC = () => {
     const handleDeleteUser = async (userId: number | undefined) => {
         if (userId) {
             await deleteUser(userId);
-            fetchUsers();
+            setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
         }
     };
 
     const handleSubmit: SubmitHandler<User> = async (data: User) => {
         if (selectedUser) {
-            await updateUser(selectedUser.id, data);
+            await updateUser(selectedUser.id, data);//kur i ben update te dhenave qe shton kjo do hedh nje error sepse ato nuk ekzistojne ne server, mund ta komentosh ne qofte se do.
+            setUsers(prevUsers =>
+                prevUsers.map(user => (user.id === selectedUser.id ? { ...data, id: selectedUser.id } : user))
+            );
         } else {
-            await createUser(data);
+            const newUserId = Math.max(...users.map(user => user.id as number), 0) + 1;
+            const newUser = { ...data, id: newUserId };
+            await createUser(newUser);
+            setUsers(prevUsers => [...prevUsers, newUser]);
         }
         setIsModalOpen(false);
-        fetchUsers();
     };
 
     const handleModalClose = () => {
